@@ -64,8 +64,8 @@ ungroup()
 ## SECTION 2: Summarize monitoring coverage and assign monitoring priority
 ## Metrics:
 ##   n.sites = number of unique site clusters in each ecoregion
-##   lc      = longest yearly coverage observed in any clustered site
-##   tc      = number of clusters with >10 years of surveys
+##   lc      = longest coverage observed in any clustered site
+##   tc      = number of sites with >10 years of surveys
 ## Priorities combine probability of detecting change (coverage) and impact
 ## (relative reef extent) into classes A-D.
 df<-ecoregion_sites |> 
@@ -96,7 +96,7 @@ Prob.detect=="Medium" & Impact=="High" ~ "B",
   select(ecoregion, n.sites, lc, tc, p.extent, Prob.detect, Impact, Priority)
 
 
-## SECTION 3: Map ecoregion priorities
+## SECTION 3: Map temporal, spatial and reef extent coverage across Pacific ecoregions
 worldMap <- ne_countries(scale = "medium", returnclass = "sf")
 target_crs <- st_crs("+proj=eqc +x_0=0 +y_0=0 +lat_0=0 +lon_0=155")
 
@@ -112,7 +112,7 @@ polygon <- st_polygon(x = list(rbind(
   c(-0.0001 - offset, -90),
   c(-0.0001 - offset, 90)
 ))) %>%
-  st_sfc() %>%
+   st_sfc() %>%
   st_set_crs(4326)
 
 world2 <- worldMap %>% st_difference(polygon)
@@ -129,20 +129,238 @@ pacific_bbox <- meow |>
   st_buffer(1000000) |>  # Add a buffer to ensure we capture all relevant areas
   st_bbox()
 
-risk_map <- meow  |> 
+
+## Figure 1: Map of Pacific ecoregions with monitoring sites
+
+sites_map<-  m.df|> 
+  mutate(site_id=1:n())  |> 
+  group_by(site_id) |>
+  summarise(n_years=length(unique(year)), length_surveys=max(year)-min(year)+1) |> 
+  st_as_sf(coords = c("decimalLongitude", "decimalLatitude"), crs = 4326)
+
+sites_map<-  sites_map  |> 
+ggplot()+
+    geom_sf(aes(fill=n_years), color="black")+
+    geom_sf(data = world3, fill = "lightgray", color = "darkgray") +
+    coord_sf(
+      crs = "+proj=robin +lon_0=155",
+      datum = st_crs(4326),
+      xlim = c(pacific_bbox["xmin"], pacific_bbox["xmax"]),
+      ylim = c(pacific_bbox["ymin"], pacific_bbox["ymax"]),
+      expand = FALSE,
+      label_axes = list(bottom = "E", left = "N")
+    ) +
+    scale_fill_viridis_c(name="Longest \nCoverage (years)",
+     na.value = "lightgrey", option="plasma", direction=-1)+
+    theme_minimal()+
+       theme(
+      panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
+      axis.ticks = element_blank(),
+      axis.ticks.length = element_blank(),
+      axis.text = element_blank(),
+      legend.position = "bottom",             # Moves legend to the bottom
+      legend.box = "horizontal"               # Ensures a horizontal layout
+  ) +
+  guides(
+    fill = guide_colorbar(
+      barwidth = 15,                        # Makes the continuous bar wider
+      barheight = 0.5,                      # Makes the continuous bar thinner
+      title.position = "top",               # Places the legend title above the bar
+      title.hjust = 0.5                     # Centers the legend title
+    )) +
+    labs(#title="Priorities for additional monitoring efforts across ecoregions",
+          #subtitle="Based on monitoring coverage (time and space) vs reef extent",
+         fill="Number of years")
+
+## Figure 2: Map of monitoring coverage and reef extent across Pacific ecoregions
+
+  ##A) Temporal coverage  map (longest time series) across Pacific ecoregions
+  temp_map<-  meow  |> 
 rename(ecoregion=ECOREGION) |> 
 left_join(df, by="ecoregion")|> 
-mutate(Priority=factor(Priority, levels=c("A", "B", "C", "D"))) |>
-st_as_sf() |>
+st_as_sf()|>
  st_shift_longitude() |>
- st_transform(crs=target_crs) |>
+ st_transform(crs=target_crs)  |> 
+ ggplot()+  
+    geom_sf(aes(fill=lc), color="black")+
+    geom_sf(data = world3, fill = "lightgray", color = "darkgray") +
+    coord_sf(
+      crs = "+proj=robin +lon_0=155",
+      datum = st_crs(4326),
+      xlim = c(pacific_bbox["xmin"], pacific_bbox["xmax"]),
+      ylim = c(pacific_bbox["ymin"], pacific_bbox["ymax"]),
+      expand = FALSE,
+      label_axes = list(bottom = "E", left = "N")
+    ) +
+    scale_fill_viridis_c(name="Longest \nCoverage (years)",
+     na.value = "lightgrey", option="plasma", direction=-1)+
+    theme_minimal()+
+       theme(
+      panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
+      axis.ticks = element_blank(),
+      axis.ticks.length = element_blank(),
+      axis.text = element_blank(),
+      legend.position = "bottom",             # Moves legend to the bottom
+      legend.box = "horizontal"               # Ensures a horizontal layout
+  ) +
+  guides(
+    fill = guide_colorbar(
+      barwidth = 15,                        # Makes the continuous bar wider
+      barheight = 0.5,                      # Makes the continuous bar thinner
+      title.position = "top",               # Places the legend title above the bar
+      title.hjust = 0.5                     # Centers the legend title
+    )) +
+    labs(#title="Priorities for additional monitoring efforts across ecoregions",
+          #subtitle="Based on monitoring coverage (time and space) vs reef extent",
+         fill="Temporal coverage (years)")
+
+ggsave("Fig/monitoring_temporal_coverage_map_meow.png", temp_map, width=10, height=6)
+ 
+
+ ## B) Spatial coverage map (number of sites) across Pacific ecoregions
+ 
+  site_map<-  meow  |> 
+rename(ecoregion=ECOREGION) |> 
+left_join(df, by="ecoregion")|> 
+st_as_sf()|>
+ st_shift_longitude() |>
+ st_transform(crs=target_crs)  |> 
+ ggplot()+  
+    geom_sf(aes(fill=n.sites), color="black")+
+    geom_sf(data = world3, fill = "lightgray", color = "darkgray") +
+    coord_sf(
+      crs = "+proj=robin +lon_0=155",
+      datum = st_crs(4326),
+      xlim = c(pacific_bbox["xmin"], pacific_bbox["xmax"]),
+      ylim = c(pacific_bbox["ymin"], pacific_bbox["ymax"]),
+      expand = FALSE,
+      label_axes = list(bottom = "E", left = "N")
+    ) +
+    scale_fill_viridis_c(name="Number \nof Sites", na.value = "lightgrey", option="plasma", direction=-1)+
+    theme_minimal()+
+      theme(
+      panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
+      axis.ticks = element_blank(),
+      axis.ticks.length = element_blank(),
+      axis.text = element_blank(),
+      legend.position = "bottom",             # Moves legend to the bottom
+      legend.box = "horizontal"               # Ensures a horizontal layout
+  ) +
+  guides(
+    fill = guide_colorbar(
+      barwidth = 15,                        # Makes the continuous bar wider
+      barheight = 0.5,                      # Makes the continuous bar thinner
+      title.position = "top",               # Places the legend title above the bar
+      title.hjust = 0.5                     # Centers the legend title
+    )) +
+    labs(fill="Spatial coverage (number of sites)")
+
+ggsave("Fig/monitoring_spatial_coverage_map_meow.png", site_map, width=10, height=6)
+ 
+ ## C) Reef extent map (relative reef extent) across Pacific ecoregions
+
+reef_map<-  meow  |>
+rename(ecoregion=ECOREGION) |> 
+left_join(df, by="ecoregion")|> 
+st_as_sf()|>
+ st_shift_longitude() |>
+ st_transform(crs=target_crs)  |> 
+ ggplot()+  
+    geom_sf(aes(fill=p.extent), color="black")+
+    geom_sf(data = world3, fill = "lightgray", color = "darkgray") +
+    coord_sf(
+      crs = "+proj=robin +lon_0=155",
+      datum = st_crs(4326),
+      xlim = c(pacific_bbox["xmin"], pacific_bbox["xmax"]),
+      ylim = c(pacific_bbox["ymin"], pacific_bbox["ymax"]),
+      expand = FALSE,
+      label_axes = list(bottom = "E", left = "N")
+    ) +
+    scale_fill_viridis_c(name="Relative Reef \nExtent", na.value = "lightgrey", option="plasma", direction=-1)+
+    theme_minimal()+
+    theme(
+      panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
+      axis.ticks = element_blank(),
+      axis.ticks.length = element_blank(),
+      axis.text = element_blank(),
+      legend.position = "bottom",             # Moves legend to the bottom
+      legend.box = "horizontal"               # Ensures a horizontal layout
+  ) +
+  guides(
+    fill = guide_colorbar(
+      barwidth = 15,                        # Makes the continuous bar wider
+      barheight = 0.5,                      # Makes the continuous bar thinner
+      title.position = "top",               # Places the legend title above the bar
+      title.hjust = 0.5                     # Centers the legend title
+    )
+  ) +
+    labs(fill="Relative reef extent")
+
+ggsave("Fig/monitoring_reef_extent_map_meow.png", reef_map, width=10, height=6)
+
+
+## Create panel figure with spatial and temporal coverage, and reef extend
+fig2<-cowplot::plot_grid(temp_map, site_map, reef_map, ncol=3, labels=c("A", "B", "C"), vjust=1.9, hjust=-2.5, label_size=16)
+ggsave("Fig/Fig2_monitoring_coverage_panel_meow.png", fig2, width=12, height=4)  
+
+
+
+### Combine spatial and temporal coverage with reef extent to classify ecoregions by monitoring priority
+
+  
+ risk_map<- temp_map|>
     ggplot()+  
     geom_sf(aes(fill=Priority), color="black")+
     geom_sf(data = world3, fill = "lightgray", color = "darkgray") +
     coord_sf(
       crs = "+proj=robin +lon_0=155",
       datum = st_crs(4326),
-      xlim = c(pacific_bbox["xmin"], pacific_bbox["xmax"]),
+      xlim = c(pacific_bbox["xmin"]-2e6, pacific_bbox["xmax"]+2e6),
+      ylim = c(pacific_bbox["ymin"], pacific_bbox["ymax"]),
+      expand = FALSE,
+      label_axes = list(bottom = "E", left = "N")
+    ) +
+    scale_fill_manual(name="Classificaiton", values=c( "#ff1010", "#ffc400" , "#a5eb03", "#1acc02"), na.value = "lightgrey")+
+    theme_minimal()+
+     theme(
+      panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
+      axis.ticks = element_blank(),
+      axis.ticks.length = element_blank(),
+      axis.text = element_blank(),
+      legend.position = "bottom",             # Moves legend to the bottom
+      legend.box = "horizontal"               # Ensures a horizontal layout
+  ) +
+  guides(
+    fill = guide_colorbar(
+      barwidth = 15,                        # Makes the continuous bar wider
+      barheight = 0.5,                      # Makes the continuous bar thinner
+      title.position = "top",               # Places the legend title above the bar
+      title.hjust = 0.5                     # Centers the legend title
+    )
+  )+
+    labs(#title="Priorities for additional monitoring efforts across ecoregions",
+          #subtitle="Based on monitoring coverage (time and space) vs reef extent",
+         fill="Priority")
+
+risk_regions <- meow  |> 
+rename(ecoregion=ECOREGION) |> 
+left_join(df, by="ecoregion")|> 
+mutate(Priority=replace_na(Priority, "A"),
+  Priority=factor(Priority, levels=c("A", "B", "C", "D"))) |>
+st_as_sf()|>
+ st_shift_longitude() |>
+ st_transform(crs=target_crs) 
+
+write_sf(risk_regions, "data/monitoring_risk_map_meow.geojson", driver = "GeoJSON")
+ 
+ risk_map<- risk_regions|>
+    ggplot()+  
+    geom_sf(aes(fill=Priority), color="black")+
+    geom_sf(data = world3, fill = "lightgray", color = "darkgray") +
+    coord_sf(
+      crs = "+proj=robin +lon_0=155",
+      datum = st_crs(4326),
+      xlim = c(pacific_bbox["xmin"]-2e6, pacific_bbox["xmax"]+2e6),
       ylim = c(pacific_bbox["ymin"], pacific_bbox["ymax"]),
       expand = FALSE,
       label_axes = list(bottom = "E", left = "N")
