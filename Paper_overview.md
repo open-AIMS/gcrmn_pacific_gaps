@@ -30,7 +30,7 @@ low spatial coverage with a density of monitoring sites of less than 1 site/100k
 
 * Across the Marine Ecoregions of the World (MEOW) ecoregions, we found that monitoring coverage is limited and unevenly distributed, 
 with under-represented ecoregions by limited number of sites (A) and short temporal series (B). 
-Contrastingly, ecoregions with high reef extent are poorly represented in monitoring efforts (C).
+Additionally, ecoregions with the highest reef extent are poorly represented in monitoring efforts (C).
 ![Fig](Fig/Fig2_monitoring_coverage_panel_meow.png)
 
 * Using a risk assessment framework, we assessed the consequences and likelihood of underrepresenting Pacific status and trends of coral reefs.
@@ -46,7 +46,6 @@ experience high bleaching frequency by 2050 under a moderate climate change scen
 
 
 ### What are the implications of our findings?
-* The results highlights that ecoregions with high reef extent, often in low income countries, are poorly represented in monitoring efforts and 
-are projected to experience high bleaching frequency by 2050, which could hinder the ability to detect changes across the 
+* The results highlights that ecoregions with high reef extent, often in low income countries, are poorly represented in monitoring efforts and are projected to experience high bleaching frequency by 2050, which could hinder the ability to detect changes across the 
 region and inform management and conservation efforts.
 
