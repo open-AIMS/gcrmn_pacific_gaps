@@ -7,9 +7,9 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Key messages
+# Key messages
 
-###Why is this important?
+### Why is this important?
 
 * Among the world's coral reefs, the Pacific region host the largest proportion of reefs by area. its 65,255 km²
 of coral reefs, which represent 26.13% of the world’s coral reefs, reside within 30 economic exclusive zones, corresponding to as many countries and
@@ -25,19 +25,20 @@ to give collective efforts towards a more comprehensive understanding of the sta
 * Overall, we found that monitoring coverage is limited and unevenly distributed, 
 with 90% of observations limited to single-year surveys, under-represented ecoregions, 
 low spatial coverage with a density of monitoring sites of less than 1 site/100km² and scarce long-term monitoring efforts (< 1% of sites monitored for longer than 10 years).
-![Fig](Fig1_Time_Spatial_Coverage.png)
+
+![Fig](Fig/Fig1_Time_Spatial_Coverage.png)
 
 * Across the Marine Ecoregions of the World (MEOW) ecoregions, we found that monitoring coverage is limited and unevenly distributed, 
 with under-represented ecoregions by limited number of sites (A) and short temporal series (B). 
 Contrastingly, ecoregions with high reef extent are poorly represented in monitoring efforts (C).
-![Fig](Fig2_monitoring_coverage_panels_meow.png)
+![Fig](Fig/Fig2_monitoring_coverage_panel_meow.png)
 
 * Using a risk assessment framework, we assessed the consequences and likelihood of underrepresenting Pacific status and trends of coral reefs.
-![Fig](Risk_table.png)
+![Fig](Fig/Risk_table.png)
 
 * Based on the risk framework, we identified ecoregions with limited monitoring coverage and high reef extent that could 
 hinder the ability to detect changes across the region, and therefore should be prioritised for future monitoring efforts.
-![Fig](monitoring_risk_map_meow.png)
+![Fig](Fig/monitoring_risk_map_meow.png)
 
 * Recognising the increasing frequency and magnitude of climate impacts on coral reefs, we also assessed the potential 
 for future bleaching events across the Pacific and identified ecoregions that are projected to 
